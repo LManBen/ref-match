@@ -64,6 +64,15 @@ describe('reconcile', () => {
     expect(r[0]!.majorityCab).toBeNull()
   })
 
+  it('prefers ECART_CAB over CAB_MANQUANT when non-null cabs conflict and one is null', () => {
+    const r = reconcile([
+      { system: 'odoo', sku: 'A', cab: '111', raw: {} },
+      { system: 'shopify', sku: 'A', cab: null, raw: {} },
+      { system: 'reflex', sku: 'A', cab: '222', raw: {} },
+    ])
+    expect(r[0]!.status).toBe('ECART_CAB')
+  })
+
   it('respects a restricted expected-systems list', () => {
     const r = reconcile([
       { system: 'odoo', sku: 'A', cab: '1', raw: {} },

@@ -38,13 +38,14 @@ export function reconcile(items: NormalizedItem[], expected: System[] = SYSTEMS)
     const cabs = presentSystems.map((s) => perSystem[s].cab)
     const majorityCab = majority(cabs)
 
+    const nonNullCabs = cabs.filter((c) => c !== null)
     let status: Status
     if (presentSystems.length < expected.length) {
       status = 'SKU_ABSENT'
+    } else if (new Set(nonNullCabs).size > 1) {
+      status = 'ECART_CAB'
     } else if (cabs.some((c) => c === null)) {
       status = 'CAB_MANQUANT'
-    } else if (new Set(cabs).size > 1) {
-      status = 'ECART_CAB'
     } else {
       status = 'OK'
     }

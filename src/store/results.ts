@@ -34,7 +34,8 @@ export function summary(db: Db, runId: number) {
   const counts = { OK: 0, ECART_CAB: 0, CAB_MANQUANT: 0, SKU_ABSENT: 0 } as Record<Status, number>
   for (const r of rows) counts[r.status] = r.n
   const run = db.prepare('SELECT started_at, partial, sources_json FROM run WHERE id = ?').get(runId) as
-    { started_at: string; partial: number; sources_json: string }
+    { started_at: string; partial: number; sources_json: string } | undefined
+  if (!run) throw new Error(`Run introuvable : ${runId}`)
   return { runId, counts, partial: !!run.partial, sources: JSON.parse(run.sources_json), startedAt: run.started_at }
 }
 
