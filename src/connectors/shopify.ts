@@ -24,7 +24,7 @@ export class ShopifyConnector implements Connector {
     const items: NormalizedItem[] = []
     let cursor: string | null = null
     do {
-      const page = await fetchJson<Page>(
+      const page: Page = await fetchJson<Page>(
         url,
         {
           method: 'POST',
