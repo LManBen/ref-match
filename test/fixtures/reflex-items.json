@@ -1,0 +1,4 @@
+{ "items": [
+  { "code": "A1", "barcode": "3400111", "label": "A" },
+  { "code": "R3", "barcode": null, "label": "R" }
+], "total": 2 }
