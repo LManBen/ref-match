@@ -63,4 +63,12 @@ describe('reconcile', () => {
     expect(r[0]!.status).toBe('CAB_MANQUANT')
     expect(r[0]!.majorityCab).toBeNull()
   })
+
+  it('respects a restricted expected-systems list', () => {
+    const r = reconcile([
+      { system: 'odoo', sku: 'A', cab: '1', raw: {} },
+      { system: 'reflex', sku: 'A', cab: '1', raw: {} },
+    ], ['odoo', 'reflex'])
+    expect(r[0]!.status).toBe('OK')
+  })
 })

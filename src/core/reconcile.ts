@@ -10,7 +10,7 @@ function majority(cabs: (string | null)[]): string | null {
   return best
 }
 
-export function reconcile(items: NormalizedItem[]): ReconResult[] {
+export function reconcile(items: NormalizedItem[], expected: System[] = SYSTEMS): ReconResult[] {
   // group by sku -> system -> items[]
   const bySku = new Map<string, Map<System, NormalizedItem[]>>()
   for (const it of items) {
@@ -25,7 +25,7 @@ export function reconcile(items: NormalizedItem[]): ReconResult[] {
   for (const [sku, m] of bySku) {
     const warnings: string[] = []
     const perSystem = {} as Record<System, PerSystem>
-    for (const sys of SYSTEMS) {
+    for (const sys of expected) {
       const arr = m.get(sys) ?? []
       if (arr.length > 1) warnings.push(`DUPLICATE_SKU:${sys}`)
       // On duplicate SKU within a system we keep the first row's cab (first-wins) and surface DUPLICATE_SKU as a warning to investigate.
@@ -34,12 +34,12 @@ export function reconcile(items: NormalizedItem[]): ReconResult[] {
         : { present: false, cab: null }
     }
 
-    const presentSystems = SYSTEMS.filter((s) => perSystem[s].present)
+    const presentSystems = expected.filter((s) => perSystem[s].present)
     const cabs = presentSystems.map((s) => perSystem[s].cab)
     const majorityCab = majority(cabs)
 
     let status: Status
-    if (presentSystems.length < SYSTEMS.length) {
+    if (presentSystems.length < expected.length) {
       status = 'SKU_ABSENT'
     } else if (cabs.some((c) => c === null)) {
       status = 'CAB_MANQUANT'
@@ -52,7 +52,7 @@ export function reconcile(items: NormalizedItem[]): ReconResult[] {
     const proposal =
       status === 'OK'
         ? null
-        : buildProposal(status, perSystem, majorityCab)
+        : buildProposal(status, perSystem, majorityCab, expected)
 
     results.push({ sku, status, perSystem, majorityCab, proposal, warnings })
   }
@@ -65,17 +65,18 @@ function buildProposal(
   status: Status,
   perSystem: Record<System, PerSystem>,
   majorityCab: string | null,
+  expected: System[],
 ): string {
   if (status === 'SKU_ABSENT') {
-    const missing = SYSTEMS.filter((s) => !perSystem[s].present)
+    const missing = expected.filter((s) => !perSystem[s].present)
     return `SKU absent de : ${missing.join(', ')} — vérifier la création de l'article.`
   }
   if (status === 'CAB_MANQUANT') {
-    const missing = SYSTEMS.filter((s) => perSystem[s].present && perSystem[s].cab === null)
+    const missing = expected.filter((s) => perSystem[s].present && perSystem[s].cab === null)
     const ref = majorityCab ? ` (valeur connue : ${majorityCab})` : ''
     return `CAB manquant dans : ${missing.join(', ')}${ref}.`
   }
   // ECART_CAB
-  const off = SYSTEMS.filter((s) => perSystem[s].present && perSystem[s].cab !== majorityCab)
+  const off = expected.filter((s) => perSystem[s].present && perSystem[s].cab !== majorityCab)
   return `Aligner ${off.join(', ')} sur la valeur majoritaire ${majorityCab} (à valider).`
 }
