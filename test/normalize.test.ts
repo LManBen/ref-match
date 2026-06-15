@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSku, normalizeCab } from '../src/core/normalize.js'
+import { normalizeSku, normalizeCab, toNormalizedItem } from '../src/core/normalize.js'
 
 describe('normalizeSku', () => {
   it('trims, uppercases, collapses internal spaces', () => {
@@ -23,5 +23,18 @@ describe('normalizeCab', () => {
   })
   it('keeps numeric EAN as string', () => {
     expect(normalizeCab(3400120000123)).toBe('3400120000123')
+  })
+})
+
+describe('toNormalizedItem', () => {
+  it('returns null when SKU is empty or whitespace', () => {
+    expect(toNormalizedItem('odoo', '', '003', {})).toBeNull()
+    expect(toNormalizedItem('odoo', '   ', '003', {})).toBeNull()
+    expect(toNormalizedItem('odoo', null, '003', {})).toBeNull()
+  })
+
+  it('returns a NormalizedItem with normalized sku and cab for valid input', () => {
+    const result = toNormalizedItem('odoo', ' a1 ', ' 003 ', {})
+    expect(result).toEqual({ system: 'odoo', sku: 'A1', cab: '003', name: undefined, raw: {} })
   })
 })

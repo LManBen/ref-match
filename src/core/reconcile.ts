@@ -28,6 +28,7 @@ export function reconcile(items: NormalizedItem[]): ReconResult[] {
     for (const sys of SYSTEMS) {
       const arr = m.get(sys) ?? []
       if (arr.length > 1) warnings.push(`DUPLICATE_SKU:${sys}`)
+      // On duplicate SKU within a system we keep the first row's cab (first-wins) and surface DUPLICATE_SKU as a warning to investigate.
       perSystem[sys] = arr.length
         ? { present: true, cab: arr[0]!.cab }
         : { present: false, cab: null }

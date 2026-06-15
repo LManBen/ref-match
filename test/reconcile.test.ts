@@ -54,4 +54,13 @@ describe('reconcile', () => {
     const r = reconcile([item('odoo', 'B', '1'), item('odoo', 'A', '1')])
     expect(r.map((x) => x.sku)).toEqual(['A', 'B'])
   })
+
+  it('marks CAB_MANQUANT with null majorityCab when present in all 3 but all cabs are null', () => {
+    const r = reconcile([
+      item('odoo', 'A', null), item('shopify', 'A', null), item('reflex', 'A', null),
+    ])
+    expect(r).toHaveLength(1)
+    expect(r[0]!.status).toBe('CAB_MANQUANT')
+    expect(r[0]!.majorityCab).toBeNull()
+  })
 })
