@@ -2,7 +2,7 @@ import type { Db } from './store/db.js'
 import { replaceSnapshot, readSnapshot, snapshotFreshness } from './store/snapshots.js'
 import { saveRun, summary as readSummary, latestRunId } from './store/results.js'
 import { reconcile } from './core/reconcile.js'
-import { SYSTEMS, type Connector, type NormalizedItem, type System } from './connectors/types.js'
+import { type Connector, type NormalizedItem, type System } from './connectors/types.js'
 import {
   resolveActivity, listActivities,
   type DirectusClient, type ResolvedActivity, type ActivitySummary,
@@ -76,7 +76,9 @@ export class RefMatchService {
     const activity = String(activityId)
     const configured = this.configuredSystems(r)
     const fresh = snapshotFreshness(this.db, activity)
-    const liveSystems = SYSTEMS.filter((s) => fresh[s])
+    // Only reconcile systems that are BOTH configured and have a current snapshot,
+    // so a system removed from config (but with a stale snapshot) can't cause false SKU_ABSENT.
+    const liveSystems = configured.filter((s) => fresh[s])
     const partial = configured.some((s) => !fresh[s])
     const items: NormalizedItem[] = liveSystems.flatMap((s) => readSnapshot(this.db, activity, s))
     const results = reconcile(items, liveSystems)

@@ -31,7 +31,14 @@ export class ReflexConnector implements Connector {
     const worker = async (): Promise<void> => {
       while (idx < skus.length) {
         const sku = skus[idx++]!
-        const cab = await this.readBarcode(sku)
+        // A single READ_ITM failure (e.g. transient error on one item) must not abort
+        // the whole catalog fetch — degrade that SKU to a missing CAB instead.
+        let cab: string | null = null
+        try {
+          cab = await this.readBarcode(sku)
+        } catch {
+          cab = null
+        }
         const it = toNormalizedItem('reflex', sku, cab, { item_code: sku })
         if (it) items.push(it)
       }
