@@ -1,15 +1,15 @@
 import type { Db } from './db.js'
 import type { ReconResult, Status } from '../core/statuses.js'
 
-export interface RunMeta { sources: string[]; partial: boolean }
+export interface RunMeta { activity: string; sources: string[]; partial: boolean }
 
 export function saveRun(db: Db, meta: RunMeta, results: ReconResult[]): number {
   const now = new Date().toISOString()
   let runId = 0
   const tx = db.transaction(() => {
     const info = db
-      .prepare('INSERT INTO run (started_at, finished_at, sources_json, partial) VALUES (?,?,?,?)')
-      .run(now, now, JSON.stringify(meta.sources), meta.partial ? 1 : 0)
+      .prepare('INSERT INTO run (activity, started_at, finished_at, sources_json, partial) VALUES (?,?,?,?,?)')
+      .run(meta.activity, now, now, JSON.stringify(meta.sources), meta.partial ? 1 : 0)
     runId = Number(info.lastInsertRowid)
     const ins = db.prepare(
       'INSERT INTO result (run_id, sku, status, per_system_json, majority_cab, proposal, warnings_json) VALUES (?,?,?,?,?,?,?)',
@@ -22,8 +22,8 @@ export function saveRun(db: Db, meta: RunMeta, results: ReconResult[]): number {
   return runId
 }
 
-export function latestRunId(db: Db): number | null {
-  const row = db.prepare('SELECT id FROM run ORDER BY id DESC LIMIT 1').get() as { id: number } | undefined
+export function latestRunId(db: Db, activity: string): number | null {
+  const row = db.prepare('SELECT id FROM run WHERE activity = ? ORDER BY id DESC LIMIT 1').get(activity) as { id: number } | undefined
   return row ? row.id : null
 }
 
@@ -33,10 +33,10 @@ export function summary(db: Db, runId: number) {
     .all(runId) as Array<{ status: Status; n: number }>
   const counts = { OK: 0, ECART_CAB: 0, CAB_MANQUANT: 0, SKU_ABSENT: 0 } as Record<Status, number>
   for (const r of rows) counts[r.status] = r.n
-  const run = db.prepare('SELECT started_at, partial, sources_json FROM run WHERE id = ?').get(runId) as
-    { started_at: string; partial: number; sources_json: string } | undefined
+  const run = db.prepare('SELECT activity, started_at, partial, sources_json FROM run WHERE id = ?').get(runId) as
+    { activity: string; started_at: string; partial: number; sources_json: string } | undefined
   if (!run) throw new Error(`Run introuvable : ${runId}`)
-  return { runId, counts, partial: !!run.partial, sources: JSON.parse(run.sources_json), startedAt: run.started_at }
+  return { runId, activity: run.activity, counts, partial: !!run.partial, sources: JSON.parse(run.sources_json), startedAt: run.started_at }
 }
 
 function rowToResult(r: any): ReconResult {

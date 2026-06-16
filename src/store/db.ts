@@ -12,6 +12,7 @@ export function openDb(path: string): Db {
 function migrate(db: Db): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS snapshot (
+      activity   TEXT NOT NULL,
       system     TEXT NOT NULL,
       sku        TEXT NOT NULL,
       cab        TEXT,
@@ -19,10 +20,11 @@ function migrate(db: Db): void {
       raw_json   TEXT NOT NULL,
       fetched_at TEXT NOT NULL
     );
-    CREATE INDEX IF NOT EXISTS idx_snapshot_system_sku ON snapshot(system, sku);
+    CREATE INDEX IF NOT EXISTS idx_snapshot_activity_system_sku ON snapshot(activity, system, sku);
 
     CREATE TABLE IF NOT EXISTS run (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      activity     TEXT NOT NULL,
       started_at   TEXT NOT NULL,
       finished_at  TEXT,
       sources_json TEXT NOT NULL,

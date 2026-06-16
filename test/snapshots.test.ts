@@ -9,20 +9,27 @@ const items: NormalizedItem[] = [
 ]
 
 describe('snapshots', () => {
-  it('replaces and reads back a system snapshot', () => {
+  it('replaces and reads back a system snapshot scoped by activity', () => {
     const db = openDb(':memory:')
-    replaceSnapshot(db, 'odoo', items)
-    const back = readSnapshot(db, 'odoo')
+    replaceSnapshot(db, '213', 'odoo', items)
+    const back = readSnapshot(db, '213', 'odoo')
     expect(back).toHaveLength(2)
     expect(back.find((i) => i.sku === 'A')!.cab).toBe('111')
     expect(back.find((i) => i.sku === 'B')!.cab).toBeNull()
   })
 
-  it('replace clears the previous snapshot for that system', () => {
+  it('isolates snapshots between activities', () => {
     const db = openDb(':memory:')
-    replaceSnapshot(db, 'odoo', items)
-    replaceSnapshot(db, 'odoo', [{ system: 'odoo', sku: 'C', cab: '9', raw: {} }])
-    const back = readSnapshot(db, 'odoo')
-    expect(back.map((i) => i.sku)).toEqual(['C'])
+    replaceSnapshot(db, '213', 'odoo', items)
+    replaceSnapshot(db, '125', 'odoo', [{ system: 'odoo', sku: 'C', cab: '9', raw: {} }])
+    expect(readSnapshot(db, '213', 'odoo').map((i) => i.sku).sort()).toEqual(['A', 'B'])
+    expect(readSnapshot(db, '125', 'odoo').map((i) => i.sku)).toEqual(['C'])
+  })
+
+  it('replace clears the previous snapshot for that activity+system', () => {
+    const db = openDb(':memory:')
+    replaceSnapshot(db, '213', 'odoo', items)
+    replaceSnapshot(db, '213', 'odoo', [{ system: 'odoo', sku: 'C', cab: '9', raw: {} }])
+    expect(readSnapshot(db, '213', 'odoo').map((i) => i.sku)).toEqual(['C'])
   })
 })

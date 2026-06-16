@@ -12,10 +12,13 @@ const mk = (sku: string, status: any): ReconResult => ({
 describe('results store', () => {
   it('saves a run and reads summary + lists', () => {
     const db = openDb(':memory:')
-    const runId = saveRun(db, { sources: ['odoo', 'shopify', 'reflex'], partial: false },
+    const runId = saveRun(db, { activity: '213', sources: ['odoo', 'shopify', 'reflex'], partial: false },
       [mk('A', 'OK'), mk('B', 'ECART_CAB'), mk('C', 'ECART_CAB')])
-    expect(latestRunId(db)).toBe(runId)
-    expect(summary(db, runId).counts.ECART_CAB).toBe(2)
+    expect(latestRunId(db, '213')).toBe(runId)
+    expect(latestRunId(db, '999')).toBeNull()
+    const s = summary(db, runId)
+    expect(s.activity).toBe('213')
+    expect(s.counts.ECART_CAB).toBe(2)
     const page = listByStatus(db, runId, 'ECART_CAB', 10, 0)
     expect(page.items.map((r) => r.sku)).toEqual(['B', 'C'])
     expect(lookup(db, runId, 'A')!.status).toBe('OK')
