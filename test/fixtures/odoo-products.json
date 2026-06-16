@@ -1,5 +1,0 @@
-{ "result": [
-  { "id": 1, "default_code": "A1", "barcode": "3400111", "name": "Item A" },
-  { "id": 2, "default_code": " b2 ", "barcode": false, "name": "Item B" },
-  { "id": 3, "default_code": false, "barcode": "999", "name": "No SKU" }
-] }
