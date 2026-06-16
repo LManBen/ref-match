@@ -20,7 +20,9 @@ export class ShopifyConnector implements Connector {
   ) {}
 
   async fetchAll(): Promise<NormalizedItem[]> {
-    const url = `${this.cfg.storeUrl}/admin/api/${this.cfg.apiVersion}/graphql.json`
+    // Directus stores the store URL without a scheme (e.g. "x.myshopify.com").
+    const base = /^https?:\/\//.test(this.cfg.storeUrl) ? this.cfg.storeUrl : `https://${this.cfg.storeUrl}`
+    const url = `${base}/admin/api/${this.cfg.apiVersion}/graphql.json`
     const items: NormalizedItem[] = []
     let cursor: string | null = null
     do {
