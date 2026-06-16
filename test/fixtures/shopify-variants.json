@@ -1,0 +1,7 @@
+{ "data": { "productVariants": {
+  "edges": [
+    { "node": { "sku": "A1", "barcode": "3400111", "displayName": "A" } },
+    { "node": { "sku": "S2", "barcode": "", "displayName": "S" } }
+  ],
+  "pageInfo": { "hasNextPage": false, "endCursor": "c1" }
+} } }
