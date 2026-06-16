@@ -1,22 +1,20 @@
 import { z } from 'zod'
 
 const Schema = z.object({
-  SHOPIFY_STORE_URL: z.string().url(),
-  SHOPIFY_ACCESS_TOKEN: z.string().min(1),
-  SHOPIFY_API_VERSION: z.string().min(1),
-  RFX_API_SERVER_URL: z.string().url(),
-  RFX_AUTH_SERVER_URL: z.string().url(),
-  RFX_API_CLIENT_ID: z.string().min(1),
-  RFX_API_CLIENT_SECRET: z.string().min(1),
   DIRECTUS_PROD_URL: z.string().url(),
   DIRECTUS_PROD_TOKEN: z.string().min(1),
+  RFX_API_SERVER_URL: z.string().url(),
+  REFLEX_USER: z.string().min(1),
+  REFLEX_PASSWORD: z.string().min(1),
+  SHOPIFY_API_VERSION: z.string().optional().default('2024-10'),
   REFMATCH_DB_PATH: z.string().optional(),
+  REFMATCH_REFLEX_CONCURRENCY: z.coerce.number().int().positive().default(8),
 })
 
 export interface Config {
-  shopify: { storeUrl: string; token: string; apiVersion: string }
-  reflex: { apiUrl: string; authUrl: string; clientId: string; clientSecret: string }
   directus: { url: string; token: string }
+  reflex: { apiUrl: string; user: string; password: string; concurrency: number }
+  shopify: { apiVersion: string }
   dbPath: string
 }
 
@@ -28,9 +26,14 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   }
   const e = parsed.data
   return {
-    shopify: { storeUrl: e.SHOPIFY_STORE_URL, token: e.SHOPIFY_ACCESS_TOKEN, apiVersion: e.SHOPIFY_API_VERSION },
-    reflex: { apiUrl: e.RFX_API_SERVER_URL, authUrl: e.RFX_AUTH_SERVER_URL, clientId: e.RFX_API_CLIENT_ID, clientSecret: e.RFX_API_CLIENT_SECRET },
     directus: { url: e.DIRECTUS_PROD_URL, token: e.DIRECTUS_PROD_TOKEN },
+    reflex: {
+      apiUrl: e.RFX_API_SERVER_URL,
+      user: e.REFLEX_USER,
+      password: e.REFLEX_PASSWORD,
+      concurrency: e.REFMATCH_REFLEX_CONCURRENCY,
+    },
+    shopify: { apiVersion: e.SHOPIFY_API_VERSION },
     dbPath: e.REFMATCH_DB_PATH ?? 'ref-match.sqlite',
   }
 }
